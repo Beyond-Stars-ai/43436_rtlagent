@@ -92,3 +92,23 @@ export FPGACHINA_TOKEN=<赛事方发放>
 | 确定性检查合规（2.11） | 编译验证由模型在 bash 中主动执行，脚本只做 trace 格式转换 |
 | 基线不可改（2.4） | `baseline.py`/`run_baseline.sh` 原样复制，未作任何修改 |
 | 单次输出上限 | 16384，与基线同口径；上下文 **32768**（交付口径，声明于 manifest 与 MODEL.md） |
+
+## 6. 本队部署方式（C 方案：权重走持久盘）与构建验证
+
+官方验证机上权重已预置于 `/workspace/models/`（21 GB，sha256 `ac0e2c11…`），因此：
+
+- **镜像内不烤权重**：`models/` 里只有 `.gitkeep`，`docker build` 会打印一行 WARN 并继续（不中断构建）；
+- **运行期**由 `serve/start.sh` 按顺序查找：`MODEL_FILE` > `/opt/models/` > `/workspace/models/`；
+- **容器内看不到宿主目录**：用 C 方案运行镜像时必须挂载，例如
+  `docker run -v /workspace/models:/workspace/models ...`；否则 `serve/start.sh` 会以
+  `FATAL: model not found` 退出（已实测，报错信息明确）。
+- 若需把权重烤进镜像（A 方案）或构建期下载（B 方案），见上文第 4 节。
+
+### 构建验证（两步，已实测）
+
+| 验证 | 做法 | 结果 |
+| :--- | :--- | :--- |
+| ① 步骤与实跑一致 | 在 Radeon 实例上原生执行 Dockerfile 的全部步骤，跑完 156 题 | ✅ 0.7769 |
+| ② 模拟构建 | 把 `BASE_IMAGE` 换成公开的 `ubuntu:24.04`、**其余行一字不改**，在真实 docker 中构建 | ✅ **20/20 步骤通过**；容器内 `node v22.23.3`、`dsh 0.2.1-rc.2`、`defaultContextWindow: 32768`、技能包与插件就位；`baseline.py` sha `17aaa609d4…` 与官方一致 |
+
+说明：官方基础镜像位于平台私有 registry，外部无法拉取，官方要求"队伍不自行构建、只保持 `BASE_IMAGE` 与步骤一致"；上述 ② 用于验证**我们新增的步骤**本身无误。

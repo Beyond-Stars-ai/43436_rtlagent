@@ -66,5 +66,9 @@ RUN set -e; \
     else echo "WARN: no weights baked in; runtime will look for /workspace/models or MODEL_FILE"; fi
 
 EXPOSE 7860 8000
-CMD ["bash", "serve/start.sh"]
+# 与官方 example 一致：不设 entrypoint。评测走 HTTP（serve/start.sh 起服务后退出），
+# 容器重建回退模式下由赛事方自行执行 serve/start.sh 与 run.sh。
+# 本地自测示例：docker run -it -v /workspace/models:/workspace/models <image> \
+#                 bash -lc "serve/start.sh && ./run.sh /path/to/task /tmp/out"
+CMD ["/bin/bash"]
 

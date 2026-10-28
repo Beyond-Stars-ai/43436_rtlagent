@@ -286,8 +286,22 @@ g = (0.7769 − 0.6321) / (1 − 0.6321) = 0.3936
 ./fetch_model.sh ./models
 # 2) 构建（Node 22 已 vendor；dsh 依赖需构建机联网从 npm 安装）
 docker build -t 43436_rtlagent .
-# BASE_IMAGE 保持官方：radeon-cloud-global/fpgachina-rtlhls@sha256:a7cf627e1170…
+# BASE_IMAGE 保持官方：fpgachina-rtlhls@sha256:a7cf627e11708e8a…（64 位，与 example/Dockerfile 逐字一致）
 ```
+
+**构建验证（两步，已实测）：**
+
+| 验证 | 做法 | 结果 |
+| :--- | :--- | :--- |
+| ① 步骤与实跑一致 | 在 Radeon 实例上原生执行 Dockerfile 的全部步骤并跑完 156 题 | ✅ 题集得分 0.7769 |
+| ② 模拟构建 | 把 `BASE_IMAGE` 换成公开 `ubuntu:24.04`、**其余行一字不改**，在真实 docker 中构建 | ✅ **20/20 步骤通过**；容器内 `node v22.23.3`、`dsh 0.2.1-rc.2`、`defaultContextWindow: 32768`、技能包与插件就位；`baseline.py` sha `17aaa609d4…` 与官方一致 |
+
+官方基础镜像位于平台私有 registry、外部无法拉取，官方亦说明"队伍不自行构建本文件、只须保持
+`BASE_IMAGE` 与步骤和实例上实际执行的一致"（`example/Dockerfile` 第 8–13 行）。上述 ② 用于验证
+**本队新增的步骤**（Node 22、DSH 安装、profile 生成、chmod）本身无误。
+
+**运行容器时须挂载权重（C 方案）：** `docker run -v /workspace/models:/workspace/models ...`，
+否则 `serve/start.sh` 以 `FATAL: model not found` 退出（已实测）。
 
 ### 7.2 启动推理服务
 
