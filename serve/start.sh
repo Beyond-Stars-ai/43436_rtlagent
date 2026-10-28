@@ -42,7 +42,9 @@ fi
 curl -sf -m 3 http://127.0.0.1:8000/v1/models >/dev/null || { echo "FATAL: llama-server not ready"; exit 1; }
 
 if ! curl -sf -m 2 http://127.0.0.1:7860/v1/health -H "Authorization: Bearer ${FPGACHINA_TOKEN:-probe}" >/dev/null 2>&1; then
-  export LLM_BACKEND=openai LLM_BASE_URL=http://127.0.0.1:8000/v1 LLM_API_KEY=sk-local LLM_MODEL=qwen36-27b
+  # /v1/health 回报的模型名须与 MODEL.md 声明一致（Qwen3.6-35B-A3B）
+  export LLM_BACKEND=openai LLM_BASE_URL=http://127.0.0.1:8000/v1 LLM_API_KEY=sk-local
+  export LLM_MODEL="${LLM_MODEL:-Qwen3.6-35B-A3B}"
   setsid python3 -m uvicorn serve.serve_api:app --host 127.0.0.1 --port 7860 --app-dir "$ROOT" \
     > "$LOG_DIR/serve_api.log" 2>&1 &
   for i in $(seq 1 90); do curl -sf -m 2 http://127.0.0.1:7860/v1/health -H "Authorization: Bearer ${FPGACHINA_TOKEN:-probe}" >/dev/null 2>&1 && break; sleep 1; done

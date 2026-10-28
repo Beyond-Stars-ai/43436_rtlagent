@@ -31,18 +31,20 @@ WORKDIR /app
 ARG FETCH_MODEL=0
 COPY models/ /opt/models/
 
-# ---- Node 22（离线：已 vendor） + DSH（构建期联网装依赖）----
+# ---- Node 22（vendor 固定版本） + DSH（npm 安装）----
 COPY vendor/node.tar.xz /tmp/node.tar.xz
 RUN mkdir -p /opt/node && tar xf /tmp/node.tar.xz -C /opt/node --strip-components=1 && rm /tmp/node.tar.xz \
  && ln -sf /opt/node/bin/node /usr/local/bin/node \
  && ln -sf /opt/node/bin/npm  /usr/local/bin/npm
-# dsh 有 ~90 个依赖，只能从 registry 装（构建期需要网络；基础镜像本身也要从 registry 拉）
-# 先试官方 registry，失败则回退到 npmmirror（国内网络更稳）
+# dsh 及其 ~90 个依赖由 npm 安装（构建期需要网络；基础镜像本身也要从 registry 拉，故构建环境本就有网）
+# 三级回退：官方源 → npmmirror → 装 NodeSource 的 node22 后再装
 RUN npm install -g @deepseek-ai/dsh@0.2.1-rc.2 --no-audit --no-fund \
  || npm install -g @deepseek-ai/dsh@0.2.1-rc.2 --no-audit --no-fund --registry=https://registry.npmmirror.com \
- || (apt-get update && apt-get install -y --no-install-recommends curl ca-certificates && \
+ || (apt-get update && apt-get install -y --no-install-recommends curl ca-certificates xz-utils && \
      curl -fsSL https://deb.nodesource.com/setup_22.x | bash - && apt-get install -y nodejs && \
      npm install -g @deepseek-ai/dsh@0.2.1-rc.2 --no-audit --no-fund --registry=https://registry.npmmirror.com)
+RUN ln -sf /opt/node/bin/dsh /usr/local/bin/dsh \
+ && dsh --version
 
 # ---- 方案文件 ----
 COPY run.sh run_baseline.sh baseline.py fetch_model.sh manifest.json REPORT.md README.md ./

@@ -269,7 +269,7 @@ g = (0.7769 − 0.6321) / (1 − 0.6321) = 0.3936
 | `run_baseline.sh` | `5c46c40d32` | 同 | ✅ 未改 |
 | `run.sh` | `b25e15b918` | 同 | ✅ 未改 |
 | `requirements.txt` | `c5da7702f1` | 同 | ✅ 未改 |
-| `serve/serve_api.py` | `bd87e530cd` | 同 | ✅ 未改 |
+| `serve/serve_api.py` | `bd87e530cd` | 已改 | 改：`vram_gb` 改读 `rocm-smi --showmeminfo vram --csv`（原实现恒为 0.0） |
 | `serve/start.sh` | `870921e507` | `b8be99f161` | 改：读取 manifest 上下文、拉起 DSH |
 | `Dockerfile` | `16a3e95c3b` | 已改 | 改：离线安装 Node22 + DSH（`vendor/`），不再 `curl` 外网 |
 
@@ -300,6 +300,9 @@ docker build -t 43436_rtlagent .
 `BASE_IMAGE` 与步骤和实例上实际执行的一致"（`example/Dockerfile` 第 8–13 行）。上述 ② 用于验证
 **本队新增的步骤**（Node 22、DSH 安装、profile 生成、chmod）本身无误。
 
+另做过一次"断网构建"对照：把 dsh 依赖树整体 vendor 后在 `docker build --network=none` 下构建，
+19/19 步通过，证明该路径可行；因基础镜像拉取本身即需网络、且该 vendor 占 84 MB，最终未随包提交。
+
 **运行容器时须挂载权重（C 方案）：** `docker run -v /workspace/models:/workspace/models ...`，
 否则 `serve/start.sh` 以 `FATAL: model not found` 退出（已实测）。
 
@@ -309,6 +312,18 @@ docker build -t 43436_rtlagent .
 bash serve/start.sh          # llama-server:8000 + serve_api:7860（setsid 常驻）
 curl -s localhost:8000/props | grep n_ctx    # 期望 32768
 ```
+
+### 7.2b 投题服务自测（按 API_CONTRACT 实测）
+
+在验证实例上以封存版本启动 `serve/start.sh`，按官方契约做过一次完整自测：
+
+| 测试 | 请求 | 结果 |
+| :--- | :--- | :--- |
+| 健康检查（带令牌） | `GET /v1/health` | `{"ready":true,"track":"rtl","model":"Qwen3.6-35B-A3B","vram_gb":21.6}` |
+| 健康检查（无令牌） | 同上，不带 `Authorization` | **401**（鉴权生效） |
+| 投题（agent） | `POST /v1/solve` `mode=agent`，VerilogEval `Prob001_zero` | 202 `queued` → `done`，`elapsed_s=10.2`，`solution` 正确 |
+| 投题（baseline） | 同上 `mode=baseline`，`Prob002_m2014_q4i` | `done`，产出 `solution`（基线为单次直出，质量不保证） |
+| `trace` 字段 | 上列 agent 任务的 `GET /v1/jobs/<id>` | 7 行 JSONL，含 `session`/`request`/`llm` 事件与 `tokens_in/out` |
 
 ### 7.3 单题运行与基线运行
 

@@ -276,14 +276,31 @@ def _read(path: str) -> str:
 def _vram_gb() -> float:
     """Best-effort VRAM reading. Reported in health, not used for scoring."""
     try:
+        # 首选：直接取 VRAM 已用字节数（card0,总字节,已用字节）
+        out = subprocess.run(
+            ["rocm-smi", "--showmeminfo", "vram", "--csv"],
+            capture_output=True, text=True, timeout=10,
+        ).stdout
+        for line in out.splitlines():
+            parts = [p.strip() for p in line.split(",")]
+            if len(parts) >= 3 and parts[1].isdigit() and parts[2].isdigit():
+                return round(int(parts[2]) / (1024 ** 3), 1)
+        # 回退：--showmemuse 的百分比列（旧格式）
         out = subprocess.run(
             ["rocm-smi", "--showmemuse", "--csv"],
             capture_output=True, text=True, timeout=10,
         ).stdout
         for line in out.splitlines():
-            parts = line.split(",")
-            if len(parts) >= 2 and parts[-1].strip().isdigit():
-                return round(int(parts[-1]) / (1024 ** 3), 1)
+            parts = [p.strip() for p in line.split(",")]
+            if len(parts) >= 2 and parts[1].isdigit():
+                total = subprocess.run(
+                    ["rocm-smi", "--showmeminfo", "vram", "--csv"],
+                    capture_output=True, text=True, timeout=10,
+                ).stdout
+                for l2 in total.splitlines():
+                    q = [p.strip() for p in l2.split(",")]
+                    if len(q) >= 2 and q[1].isdigit():
+                        return round(int(q[1]) * int(parts[1]) / 100 / (1024 ** 3), 1)
     except (OSError, subprocess.SubprocessError):
         pass
     return 0.0

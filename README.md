@@ -95,7 +95,10 @@ export FPGACHINA_TOKEN=<赛事方发放>
 
 ## 6. 本队部署方式（C 方案：权重走持久盘）与构建验证
 
-官方验证机上权重已预置于 `/workspace/models/`（21 GB，sha256 `ac0e2c11…`），因此：
+验证实例的持久盘 `/workspace` 配额 25 GB，放不下 21 GB 权重；权重由 `fetch_model.sh` 下到
+`/var/tmp/models_35b/`（实例存活期内有效）。`serve/start.sh` 的查找顺序为
+`MODEL_FILE` > `/opt/models/` > `/workspace/models/`，因此在实例上用任一方式指向真实文件即可：
+设置 `MODEL_FILE`，或在 `/workspace/models/` 建同名软链（本队实测用后者，`start.sh` 默认查找即可命中）。
 
 - **镜像内不烤权重**：`models/` 里只有 `.gitkeep`，`docker build` 会打印一行 WARN 并继续（不中断构建）；
 - **运行期**由 `serve/start.sh` 按顺序查找：`MODEL_FILE` > `/opt/models/` > `/workspace/models/`；
@@ -109,6 +112,7 @@ export FPGACHINA_TOKEN=<赛事方发放>
 | 验证 | 做法 | 结果 |
 | :--- | :--- | :--- |
 | ① 步骤与实跑一致 | 在 Radeon 实例上原生执行 Dockerfile 的全部步骤，跑完 156 题 | ✅ 0.7769 |
-| ② 模拟构建 | 把 `BASE_IMAGE` 换成公开的 `ubuntu:24.04`、**其余行一字不改**，在真实 docker 中构建 | ✅ **20/20 步骤通过**；容器内 `node v22.23.3`、`dsh 0.2.1-rc.2`、`defaultContextWindow: 32768`、技能包与插件就位；`baseline.py` sha `17aaa609d4…` 与官方一致 |
+| ② 模拟构建（联网，npm 装 dsh） | 把 `BASE_IMAGE` 换成公开的 `ubuntu:24.04`、**其余行一字不改**，在真实 docker 中构建 | ✅ **20/20 步骤通过**；容器内 `node v22.23.3`、`dsh 0.2.1-rc.2`、`defaultContextWindow: 32768`、技能包与插件就位；`baseline.py` sha `17aaa609d4…` 与官方一致 |
+| ③ 模拟构建（**断网**，依赖已 vendor） | 同上，但把 dsh 依赖树整体打进 `vendor/`，`docker build --network=none` | ✅ **19/19 步骤通过**，证明"零外网"路径也可行（该 84 MB vendor 为可选项，最终未随包提交，以控制仓库体积） |
 
 说明：官方基础镜像位于平台私有 registry，外部无法拉取，官方要求"队伍不自行构建、只保持 `BASE_IMAGE` 与步骤一致"；上述 ② 用于验证**我们新增的步骤**本身无误。
