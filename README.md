@@ -1,4 +1,4 @@
-﻿# 43436_rtlagent —— RTL 本地智能体方案
+# 43436_rtlagent —— RTL 本地智能体方案
 
 > 赛道：2026 FPGA 创新设计大赛 · AMD 3.1 RTL/HLS 本地智能体设计赛道
 > 智能体运行时：DeepSeek Harness（DSH）0.2.1-rc.2 headless
@@ -62,7 +62,8 @@ prompt.txt --> run_baseline.sh : 官方基线（单次直出，不重试、不�
 ```bash
 # 1) 取权重（21 GB，三选一，详见下）
 ./fetch_model.sh ./models
-# 1b) 构建（Node/dsh 已随仓库 vendor/，构建本身不需要外网）
+# 1b) 构建（Node 22 已 vendor；dsh 的 ~90 个依赖仍需构建机联网从 npm 装）
+#     注意：拉取基础镜像本身就需要网络，因此"构建期联网、运行期断网"是官方口径。
 docker build -t 43436_rtlagent .
 #     若构建机可联网且不想预放权重：docker build --build-arg FETCH_MODEL=1 -t 43436_rtlagent .
 
@@ -91,11 +92,3 @@ export FPGACHINA_TOKEN=<赛事方发放>
 | 确定性检查合规（2.11） | 编译验证由模型在 bash 中主动执行，脚本只做 trace 格式转换 |
 | 基线不可改（2.4） | `baseline.py`/`run_baseline.sh` 原样复制，未作任何修改 |
 | 单次输出上限 | 16384，与基线同口径；上下文 **32768**（交付口径，声明于 manifest 与 MODEL.md） |
-
-## 6. 本队部署方式（C 方案：权重走持久盘）
-
-官方验证机上权重已预置于 `/workspace/models/`（21 GB，sha256 `ac0e2c11…`），因此：
-
-- **镜像内不烤权重**：`models/` 里只有 `.gitkeep`，`docker build` 会打印一行 WARN 并继续（不中断构建）；
-- **运行期**由 `serve/start.sh` 按顺序查找：`MODEL_FILE` > `/opt/models/` > `/workspace/models/`；
-- 若需把权重烤进镜像（A 方案）或构建期下载（B 方案），见上文第 4 节。

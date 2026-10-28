@@ -1,10 +1,14 @@
 # syntax=docker/dockerfile:1
 # 43436_rtlagent —— 基于赛事方官方基础镜像构建
-#   官方基镜像：radeon-cloud-global/fpgachina-rtlhls@sha256:a7cf627e1170…
+#   官方基镜像：fpgachina-rtlhls（rocm10-2026.1-r3，Radeon Cloud 私有 registry）
 #   内含 Vivado/Vitis 2026.1、llama.cpp(/opt/llamacpp)、ROCm 10.0、python3
 #   本方案额外依赖：Node 22 + @deepseek-ai/dsh 0.2.1-rc.2（约 +900 MB）
 #   构建前须把权重放进构建上下文：models/Qwen3.6-35B-A3B-UD-Q4_K_M.gguf（21 GB）
-FROM radeon-cloud-global/fpgachina-rtlhls@sha256:a7cf627e1170e8a6dcd9de689ff934f7b450b79369ebc7bb0217e8b54d81e56
+# BASE_IMAGE 与官方 example/Dockerfile 完全一致（含完整 digest，64 位）
+# 官方说明：该镜像在平台私有 registry 内，外部无法拉取；实例上也没有 docker，
+# 因此队伍不自行构建本文件；赛事方仅在"容器重建回退模式"下用它（API_CONTRACT §8）。
+ARG BASE_IMAGE=fpgachina-rtlhls@sha256:a7cf627e11708e8a6dcd9de689ff934f7b450b79369ebc7bb0217e8b54d81e56
+FROM ${BASE_IMAGE}
 
 ENV DEBIAN_FRONTEND=noninteractive \
     PYTHONUNBUFFERED=1 \
@@ -27,13 +31,18 @@ WORKDIR /app
 ARG FETCH_MODEL=0
 COPY models/ /opt/models/
 
-# ---- Node 22 + DSH（离线构建：依赖已随仓库放在 vendor/，不访问外网）----
+# ---- Node 22（离线：已 vendor） + DSH（构建期联网装依赖）----
 COPY vendor/node.tar.xz /tmp/node.tar.xz
 RUN mkdir -p /opt/node && tar xf /tmp/node.tar.xz -C /opt/node --strip-components=1 && rm /tmp/node.tar.xz \
  && ln -sf /opt/node/bin/node /usr/local/bin/node \
  && ln -sf /opt/node/bin/npm  /usr/local/bin/npm
-COPY vendor/dsh-0.2.1-rc.2.tgz /tmp/dsh.tgz
-RUN npm install -g /tmp/dsh.tgz --no-audit --no-fund && rm -f /tmp/dsh.tgz
+# dsh 有 ~90 个依赖，只能从 registry 装（构建期需要网络；基础镜像本身也要从 registry 拉）
+# 先试官方 registry，失败则回退到 npmmirror（国内网络更稳）
+RUN npm install -g @deepseek-ai/dsh@0.2.1-rc.2 --no-audit --no-fund \
+ || npm install -g @deepseek-ai/dsh@0.2.1-rc.2 --no-audit --no-fund --registry=https://registry.npmmirror.com \
+ || (apt-get update && apt-get install -y --no-install-recommends curl ca-certificates && \
+     curl -fsSL https://deb.nodesource.com/setup_22.x | bash - && apt-get install -y nodejs && \
+     npm install -g @deepseek-ai/dsh@0.2.1-rc.2 --no-audit --no-fund --registry=https://registry.npmmirror.com)
 
 # ---- 方案文件 ----
 COPY run.sh run_baseline.sh baseline.py fetch_model.sh manifest.json REPORT.md README.md ./
@@ -56,6 +65,6 @@ RUN set -e; \
     if [ -f "$GGUF" ]; then echo "OK: weights baked in ($GGUF)"; \
     else echo "WARN: no weights baked in; runtime will look for /workspace/models or MODEL_FILE"; fi
 
-EXPOSE 7860
+EXPOSE 7860 8000
 CMD ["bash", "serve/start.sh"]
 

@@ -284,7 +284,7 @@ g = (0.7769 − 0.6321) / (1 − 0.6321) = 0.3936
 ```bash
 # 1) 取权重（21 GB，不入 Git）：放一份到构建上下文
 ./fetch_model.sh ./models
-# 2) 构建（离线：Node 22 与 dsh 包已随仓库放在 vendor/，构建不再访问外网）
+# 2) 构建（Node 22 已 vendor；dsh 依赖需构建机联网从 npm 安装）
 docker build -t 43436_rtlagent .
 # BASE_IMAGE 保持官方：radeon-cloud-global/fpgachina-rtlhls@sha256:a7cf627e1170…
 ```
