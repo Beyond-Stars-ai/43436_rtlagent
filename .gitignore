@@ -1,0 +1,12 @@
+# 权重（21 GB）
+models/*
+!models/.gitkeep
+*.gguf
+# 运行产物
+runs/
+out/
+*.log
+__pycache__/
+*.pyc
+.env
+env.sh

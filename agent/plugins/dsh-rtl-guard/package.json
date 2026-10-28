@@ -1,0 +1,8 @@
+{
+  "name": "dsh-rtl-guard",
+  "version": "0.1.0",
+  "description": "RTL guard: deterministic checks for the RTL task loop (empty-output interception first)",
+  "type": "module",
+  "main": "index.js",
+  "exports": { ".": "./index.js" }
+}

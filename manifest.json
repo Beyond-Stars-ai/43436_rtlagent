@@ -1,0 +1,62 @@
+{
+  "schema_version": 1,
+  "track": "rtl",
+  "model": {
+    "name": "Qwen/Qwen3.6-35B-A3B (unsloth GGUF UD-Q4_K_M, MoE 35B-A3B)",
+    "source": "https://huggingface.co/unsloth/Qwen3.6-35B-A3B-GGUF",
+    "revision": "a483e9e6cbd595906af30beda3187c2663a1118c",
+    "quantization": "gguf-ud-q4_k_m",
+    "measured_vram_gb": 22.9,
+    "finetuned": false,
+    "finetune_weights_url": null
+  },
+  "auxiliary_models": [],
+  "context": {
+    "max_model_len": 32768,
+    "max_output_tokens": 8192,
+    "rope_scaling": null
+  },
+  "generation": {
+    "chat_template_kwargs": {
+      "enable_thinking": false
+    },
+    "reasoning_effort": null
+  },
+  "serving": {
+    "backend": "llamacpp",
+    "version": "image /opt/llamacpp + dsh 0.2.1-rc.2",
+    "start_command": "./serve/start.sh",
+    "port": 8000
+  },
+  "endpoints": {
+    "solve": "./run.sh",
+    "baseline": "./run_baseline.sh",
+    "http_port": 7860
+  },
+  "agent": {
+    "max_rounds": 3,
+    "tools": [
+      "bash",
+      "edit",
+      "glob",
+      "grep",
+      "read",
+      "read_image",
+      "skill",
+      "todo_write",
+      "working_directory",
+      "write"
+    ],
+    "skills": [
+      "verilog-2001-syntax"
+    ],
+    "runtime": "dsh 0.2.1-rc.2 (headless profile, DSH_HOME=/opt/dsh-home)",
+    "entry": "run.sh -> agent/main.py",
+    "workspace_instructions": "agent/AGENTS.md",
+    "plugins": [
+      "dsh-rtl-guard",
+      "dsh-spec-oracle"
+    ],
+    "verification": "xvlog + xelab（每回合由 rtl-guard 执行），波形题额外 xsim（spec-oracle）"
+  }
+}

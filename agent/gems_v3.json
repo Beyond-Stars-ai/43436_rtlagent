@@ -1,0 +1,267 @@
+{
+ "base": [
+  {
+   "id": "b.deliver",
+   "slot": "BASE",
+   "text": "**只有写进 `<output_dir>/solution.v` 才算完成。** 在回复里给代码、在分析里写表达式，都不算交付。用 `write` 整体覆盖，每次都提交一份完整、可编译的实现。",
+   "always": true,
+   "priority": 100
+  },
+  {
+   "id": "b.topmodule",
+   "slot": "BASE",
+   "text": "题面若未显式给出模块名，**必须命名为 `TopModule`**。",
+   "always": true,
+   "priority": 100
+  },
+  {
+   "id": "b.nodoc",
+   "slot": "BASE",
+   "text": "不写设计文档。最终代码只放在 `solution.v`。",
+   "always": true,
+   "priority": 100
+  },
+  {
+   "id": "b.norewrite",
+   "slot": "BASE",
+   "text": "不要为了更优雅而重写已通过的实现。",
+   "always": true,
+   "priority": 90
+  }
+ ],
+ "s1_interface": [
+  {
+   "id": "g.port.exact",
+   "slot": "S1",
+   "text": "端口名、方向、位宽、顺序必须与题面**逐字一致**；不加端口、不改名。",
+   "always": true,
+   "priority": 95
+  },
+  {
+   "id": "g.port.out_as_input",
+   "slot": "S1",
+   "text": "题面若把某个输出写成 `input`，而描述里它被计算，就按 `output reg` 写，端口名不改。",
+   "tags": [
+    "any"
+   ],
+   "priority": 70
+  }
+ ],
+ "s2_style": [
+  {
+   "id": "g.style.simple",
+   "slot": "S2",
+   "text": "**简单/组合题**（门电路、多路器、位向量、真值表、K-map、计数器）：用 Verilog-2001 风格——`assign` 配 `wire`，或 `always @(*)` 配 `output reg`。",
+   "tags": [
+    "COMB",
+    "MUX",
+    "KMAP",
+    "VEC",
+    "COUNT",
+    "WAVE"
+   ],
+   "priority": 80
+  },
+  {
+   "id": "g.style.complex",
+   "slot": "S2",
+   "text": "**复杂题**（状态机、多状态 + 数据通路）：用 SystemVerilog——`typedef enum` 声明状态、`always_ff` 描述时序、`case` 全覆盖。",
+   "tags": [
+    "FSM",
+    "ALGO",
+    "SEQ",
+    "WAVE"
+   ],
+   "priority": 80
+  },
+  {
+   "id": "g.lang.sv_ok",
+   "slot": "S2",
+   "always": true,
+   "priority": 85,
+   "text": "判分器以 `xvlog -sv` 编译，**SystemVerilog 允许**。"
+  }
+ ],
+ "s3_semantics": [
+  {
+   "id": "g.sem.fsm",
+   "slot": "S3",
+   "text": "状态机：`typedef enum` 声明状态；`case` 必须覆盖全部状态（未列出的回到初始态）。",
+   "tags": [
+    "FSM"
+   ],
+   "priority": 85
+  },
+  {
+   "id": "g.sem.counter",
+   "slot": "S3",
+   "text": "计数器：先按题面确定回绕边界（到 N 归零还是停在 N-1），位宽按最大值定。",
+   "tags": [
+    "COUNT"
+   ],
+   "priority": 75
+  },
+  {
+   "id": "g.sem.kmap",
+   "slot": "S3",
+   "text": "K-map/真值表：按题面列序读出表达式；变量次序以题面标注为准。",
+   "tags": [
+    "KMAP",
+    "MUX"
+   ],
+   "priority": 75
+  },
+  {
+   "id": "g.sem.vector",
+   "slot": "S3",
+   "text": "位操作：按题面例子确定 `q[0]` 在哪端、是否符号扩展、是否反转次序。",
+   "tags": [
+    "VEC"
+   ],
+   "priority": 75
+  },
+  {
+   "id": "g.sem.wave",
+   "slot": "S3",
+   "text": "波形表：把每行当作一次采样，先写出“输入→输出”的对应关系，再实现。",
+   "tags": [
+    "WAVE"
+   ],
+   "priority": 85
+  }
+ ],
+ "s4_timing": [
+  {
+   "id": "g.seq.always_ff",
+   "slot": "S4",
+   "text": "时序逻辑：SystemVerilog 用 `always_ff @(posedge clk)`（配 `logic`），Verilog-2001 用 `always @(posedge clk)`（配 `reg`）；组合逻辑用 `always @(*)`。",
+   "tags": [
+    "SEQ",
+    "FSM",
+    "COUNT",
+    "ALGO",
+    "WAVE"
+   ],
+   "priority": 80
+  },
+  {
+   "id": "g.seq.nextstate",
+   "slot": "S4",
+   "text": "题面要求“下一周期”时输出必须寄存一拍；要求“同一周期”时用组合赋值。",
+   "tags": [
+    "SEQ",
+    "FSM"
+   ],
+   "priority": 70
+  }
+ ],
+ "s5_verify": [
+  {
+   "id": "g.verify.compile",
+   "slot": "S5",
+   "always": true,
+   "priority": 90,
+   "text": "自查编译：`xvlog -sv solution.v` 0 错、`xelab -debug typical TopModule -s s1` 打印 `Built`，最多 3 轮。"
+  },
+  {
+   "id": "g.verify.func",
+   "slot": "S5",
+   "always": true,
+   "priority": 90,
+   "text": "自查功能：按题面的真值表 / 波形 / 文字描述逐条对一遍输出，发现不符就改 `solution.v`。"
+  },
+  {
+   "id": "g.verify.detail",
+   "slot": "S5",
+   "always": true,
+   "priority": 85,
+   "text": "自查细节：端口方向与位宽、位序（`out[0]` 来自哪一位）、题面是否要求“下一周期”。"
+  }
+ ],
+ "s6_trap": [
+  {
+   "id": "g.trap.ansi_dup",
+   "slot": "S6",
+   "text": "禁止在模块体内重复声明 ANSI 端口（`VRFC 10-9336`）。",
+   "priority": 95,
+   "always": true
+  },
+  {
+   "id": "g.trap.undeclared",
+   "slot": "S6",
+   "always": true,
+   "priority": 95,
+   "text": "信号未声明（`VRFC 10-1280`）：先声明 `logic`/`reg`/`wire` 再赋值；中间信号提到模块级，注意拼写。"
+  },
+  {
+   "id": "g.trap.bitsel",
+   "slot": "S6",
+   "tags": [
+    "any"
+   ],
+   "priority": 72,
+   "text": "位选范围必须是常量表达式：用 `in[sel*4 +: 4]`，不要写 `in[sel*4+3 : sel*4]`（`VRFC 10-2951`/`10-4982`）。",
+   "always": true
+  }
+ ],
+ "experimental": [
+  {
+   "id": "x.ff_logic",
+   "slot": "S2",
+   "text": "用 `always_ff`/`always_comb` 时，被赋值的信号必须声明为 `logic`，不能是 `reg`（`xvlog -sv` 会报错）。",
+   "tags": [
+    "FSM",
+    "SEQ"
+   ],
+   "evidence": "Prob053 规则1实验出现 L0：reg + always_ff 编译失败",
+   "default": false
+  },
+  {
+   "id": "x.dual_edge",
+   "slot": "S4",
+   "text": "两个沿各寄存后再做选择：用 `always @(*)` 赋 `reg`，别用 `assign` 串联（delta 竞态）。",
+   "tags": [
+    "SEQ",
+    "FSM",
+    "WAVE"
+   ],
+   "evidence": "Prob078 对照：加此规则 2/2 L3（45~47s），不加 1/2（305s 错一次）",
+   "default": false
+  },
+  {
+   "id": "g.trap.always_decl",
+   "slot": "S6",
+   "text": "禁止在 `always` 块内声明 `wire`/`reg`（`VRFC 10-2989`）；中间信号提到模块级。",
+   "tags": [
+    "any"
+   ],
+   "priority": 70,
+   "default": false,
+   "evidence": "历史日志频率低（2989 未见、3236 1 次、9195 0 次）"
+  },
+  {
+   "id": "g.trap.multi_driver",
+   "slot": "S6",
+   "text": "同一信号不能既用 `always` 赋值又用 `assign` 驱动（`VRFC 10-3236`）。",
+   "tags": [
+    "any"
+   ],
+   "priority": 70,
+   "default": false,
+   "evidence": "历史日志频率低（2989 未见、3236 1 次、9195 0 次）"
+  },
+  {
+   "id": "g.trap.gate_named",
+   "slot": "S6",
+   "text": "门级原语不要用具名连接（`VRFC 10-9195`）。",
+   "tags": [
+    "COMB",
+    "MUX",
+    "KMAP"
+   ],
+   "priority": 70,
+   "default": false,
+   "evidence": "历史日志频率低（2989 未见、3236 1 次、9195 0 次）"
+  }
+ ]
+}

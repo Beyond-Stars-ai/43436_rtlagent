@@ -1,0 +1,1 @@
+# 权重放在此目录；构建前执行 ./fetch_model.sh ./models
