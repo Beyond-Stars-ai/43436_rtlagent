@@ -41,7 +41,7 @@ PYEOF
 MAX_LEN="${MAX_LEN:-32768}"
 export ROCBLAS_TENSILE_LIBPATH="${ROCBLAS_TENSILE_LIBPATH:-/opt/llamacpp/rocblas/library}"
 export XILINXD_LICENSE_FILE="${XILINXD_LICENSE_FILE:-2100@vivado-lic.fpgachina.svc.cluster.local}"
-export FLEXLM_TIMEOUT="${FLEXLM_TIMEOUT:-300000000}"
+export FLEXLM_TIMEOUT="${FLEXLM_TIMEOUT:-600}"
 export EDA_TMP="${EDA_TMP:-/var/tmp/eda}"; mkdir -p "$EDA_TMP"
 
 [ -f "$MODEL_FILE" ] || { echo "FATAL: model not found: $MODEL_FILE"; exit 1; }

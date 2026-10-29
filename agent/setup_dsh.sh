@@ -167,6 +167,20 @@ if [ "$GOT" != "$DSH_VER" ]; then
 fi
 npm config set update-notifier false >/dev/null 2>&1 || true
 echo "DSH ready: $GOT | DSH_HOME=$DSH_HOME_DIR"
+# ---- 5. 依赖闭包自检：插件包与 profile 引用必须齐全（防止"手工装过、包里没装"重演）----
+MISSING=0
+for pkg in dsh-rtl-guard dsh-spec-oracle; do
+  if [ ! -f "$DSH_HOME_DIR/node_modules/$pkg/package.json" ]; then
+    echo "FATAL: 缺少插件包 $pkg（$DSH_HOME_DIR/node_modules/$pkg）" >&2
+    MISSING=1
+  fi
+done
+if ! grep -q "name: 'dsh-rtl-guard'" "$DSH_HOME_DIR/profiles/headless/cordis.patch.yml" 2>/dev/null; then
+  echo "FATAL: profile 未引用 rtl-guard 插件" >&2
+  MISSING=1
+fi
+[ "$MISSING" -eq 0 ] && echo "plugins ok: dsh-rtl-guard + dsh-spec-oracle"
+
 
 
 
