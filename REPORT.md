@@ -136,6 +136,17 @@ llama.cpp（`/opt/llamacpp/llama-server`），`-ngl 999`，`--jinja`，`--reason
 
 ---
 
+## 技能包构成（避免误读）
+
+本方案的领域知识分布在两处，合计构成本队技能包：
+
+| 位置 | 内容 | 生效方式 |
+| :--- | :--- | :--- |
+| `agent/prompt4/` | **16 条**自查条目（kmap/kmapdc/truthtable/reverse/priority/sumwidth/count/fsm/onehot/mealy/seqdet/edge/concat/adder/ca/wave）+ base/pitfalls/check_stable/fixed | 按题面关键词路由，拼进每题提示词（1.7~2.3 KB） |
+| `skill/` | 1 个 DSH 技能 `verilog-2001-syntax`（另 1 个 `rtl-module-interface-contract` 以 `.disabled` 保留，见 `skill/README.md`） | 模型用 `skill` 工具按需加载 |
+
+报告 §5 的"技能清单/提炼过程/有效性验证"对应 `agent/prompt4/` 这批条目。
+
 ## 5. 技能包
 
 ### 5.1 技能清单

@@ -14,7 +14,7 @@ ENV DEBIAN_FRONTEND=noninteractive \
     PYTHONUNBUFFERED=1 \
     EDA_TMP=/var/tmp/eda AGENT_TMP=/var/tmp SELFTEST_TMP=/var/tmp \
     XILINXD_LICENSE_FILE=2100@vivado-lic.fpgachina.svc.cluster.local \
-    FLEXLM_TIMEOUT=300000000 \
+    FLEXLM_TIMEOUT=600 \
     ROCBLAS_TENSILE_LIBPATH=/opt/llamacpp/rocblas/library \
     MODEL_FILE=/opt/models/Qwen3.6-35B-A3B-UD-Q4_K_M.gguf \
     DSH_HOME=/opt/dsh-home \
