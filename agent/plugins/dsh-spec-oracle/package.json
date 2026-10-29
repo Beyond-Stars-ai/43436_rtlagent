@@ -1,0 +1,8 @@
+{
+  "name": "dsh-spec-oracle",
+  "version": "0.1.0",
+  "description": "spec-oracle: turn spec waveform tables into an executable testbench and enforce it",
+  "type": "module",
+  "main": "index.js",
+  "exports": { ".": "./index.js" }
+}

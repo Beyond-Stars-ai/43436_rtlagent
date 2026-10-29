@@ -93,6 +93,8 @@ export FPGACHINA_TOKEN=<赛事方发放>
 | 基线不可改（2.4） | `baseline.py`/`run_baseline.sh` 原样复制，未作任何修改 |
 | 单次输出上限 | 16384，与基线同口径；上下文 **32768**（交付口径，声明于 manifest 与 MODEL.md） |
 
+> 实例部署/恢复（含持久盘被清空、实例重启两种极端情况）见 [`docs/INSTANCE_SETUP.md`](./docs/INSTANCE_SETUP.md)。
+
 ## 6. 本队部署方式（C 方案：权重走持久盘）与构建验证
 
 验证实例的持久盘 `/workspace` 配额 25 GB，放不下 21 GB 权重；权重由 `fetch_model.sh` 下到

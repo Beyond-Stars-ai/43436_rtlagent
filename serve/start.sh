@@ -5,14 +5,29 @@ HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$HERE/.." && pwd)"
 LOG_DIR="${SERVE_LOG_DIR:-${AGENT_TMP:-/tmp}/serve-logs}"; mkdir -p "$LOG_DIR"
 
-# 权重查找顺序：显式指定 > 镜像内 /opt/models > 持久盘 /workspace/models
+# 权重查找顺序：显式 MODEL_FILE > 镜像内 /opt/models > 持久盘 /workspace/models
+#               > 实例临时目录 /var/tmp/models_35b（fetch_model.sh 的默认落点）
+#               > 任意 /var/tmp 下的同名文件（持久盘被清空时的兜底）
 MODEL_NAME="${MODEL_FILENAME:-Qwen3.6-35B-A3B-UD-Q4_K_M.gguf}"
 if [ -z "${MODEL_FILE:-}" ]; then
-  for c in "/opt/models/$MODEL_NAME" "/workspace/models/$MODEL_NAME"; do
+  for c in "/opt/models/$MODEL_NAME" "/workspace/models/$MODEL_NAME" \
+           "/var/tmp/models_35b/$MODEL_NAME" "/tmp/models_35b/$MODEL_NAME"; do
     [ -f "$c" ] && MODEL_FILE="$c" && break
   done
 fi
+if [ -z "${MODEL_FILE:-}" ]; then
+  for c in $(ls -1 /var/tmp/*/"$MODEL_NAME" /var/tmp/"$MODEL_NAME" 2>/dev/null | head -1); do
+    [ -f "$c" ] && MODEL_FILE="$c"
+  done
+fi
 MODEL_FILE="${MODEL_FILE:-/opt/models/$MODEL_NAME}"
+
+# DSH 运行时缺失时自动引导（node + dsh + profile），保证实例被重置后也能起服务
+if ! command -v dsh >/dev/null 2>&1; then
+  echo "dsh not found -> bootstrap via agent/setup_dsh.sh"
+  DSH_HOME="${DSH_HOME:-$ROOT/.dsh-home}" bash "$ROOT/agent/setup_dsh.sh" || true
+  export PATH="/opt/node/bin:$PATH"
+fi
 
 # 上下文长度以 manifest.json 的 context.max_model_len 为准（评分细则 1.3：队伍自定，须声明）
 MAX_LEN="$(python3 - "$ROOT/manifest.json" <<'PYEOF' 2>/dev/null || echo 32768
