@@ -2,17 +2,17 @@
   "schema_version": 1,
   "track": "rtl",
   "model": {
-    "name": "Qwen/Qwen3.6-35B-A3B (unsloth GGUF UD-Q4_K_M, MoE 35B-A3B)",
+    "name": "Qwen/Qwen3.6-35B-A3B (unsloth GGUF UD-Q5_K_M, MoE 35B-A3B)",
     "source": "https://huggingface.co/unsloth/Qwen3.6-35B-A3B-GGUF",
     "revision": "a483e9e6cbd595906af30beda3187c2663a1118c",
-    "quantization": "gguf-ud-q4_k_m",
-    "measured_vram_gb": 21.6,
+    "quantization": "gguf-ud-q5_k_m",
+    "measured_vram_gb": 27.8,
     "finetuned": false,
     "finetune_weights_url": null
   },
   "auxiliary_models": [],
   "context": {
-    "max_model_len": 32768,
+    "max_model_len": 49152,
     "max_output_tokens": 16384,
     "rope_scaling": null
   },

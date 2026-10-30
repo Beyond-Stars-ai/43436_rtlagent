@@ -61,7 +61,7 @@ cat > "$DSH_HOME_DIR/profiles/headless/cordis.patch.yml" <<'YML'
         baseURL: http://127.0.0.1:8000/v1
         apiKeyEnv: LOCAL_LLM_KEY
         displayName: local-llama
-        defaultContextWindow: 32768
+        defaultContextWindow: 49152
         models:
           - id: qwen36-35b
 - id: agent-default-model

@@ -8,9 +8,10 @@ LOG_DIR="${SERVE_LOG_DIR:-${AGENT_TMP:-/tmp}/serve-logs}"; mkdir -p "$LOG_DIR"
 # 权重查找顺序：显式 MODEL_FILE > 镜像内 /opt/models > 持久盘 /workspace/models
 #               > 实例临时目录 /var/tmp/models_35b（fetch_model.sh 的默认落点）
 #               > 任意 /var/tmp 下的同名文件（持久盘被清空时的兜底）
-MODEL_NAME="${MODEL_FILENAME:-Qwen3.6-35B-A3B-UD-Q4_K_M.gguf}"
+MODEL_NAME="${MODEL_FILENAME:-Qwen3.6-35B-A3B-UD-Q5_K_M.gguf}"
 if [ -z "${MODEL_FILE:-}" ]; then
   for c in "/opt/models/$MODEL_NAME" "/workspace/models/$MODEL_NAME" \
+           "/var/tmp/models_q5/$MODEL_NAME" \
            "/var/tmp/models_35b/$MODEL_NAME" "/tmp/models_35b/$MODEL_NAME"; do
     [ -f "$c" ] && MODEL_FILE="$c" && break
   done
@@ -30,15 +31,15 @@ if ! command -v dsh >/dev/null 2>&1; then
 fi
 
 # 上下文长度以 manifest.json 的 context.max_model_len 为准（评分细则 1.3：队伍自定，须声明）
-MAX_LEN="$(python3 - "$ROOT/manifest.json" <<'PYEOF' 2>/dev/null || echo 32768
+MAX_LEN="$(python3 - "$ROOT/manifest.json" <<'PYEOF' 2>/dev/null || echo 49152
 import json, sys
 try:
     print(json.load(open(sys.argv[1]))["context"]["max_model_len"])
 except Exception:
-    print(32768)
+    print(49152)
 PYEOF
 )"
-MAX_LEN="${MAX_LEN:-32768}"
+MAX_LEN="${MAX_LEN:-49152}"
 export ROCBLAS_TENSILE_LIBPATH="${ROCBLAS_TENSILE_LIBPATH:-/opt/llamacpp/rocblas/library}"
 export XILINXD_LICENSE_FILE="${XILINXD_LICENSE_FILE:-2100@vivado-lic.fpgachina.svc.cluster.local}"
 export FLEXLM_TIMEOUT="${FLEXLM_TIMEOUT:-600}"
