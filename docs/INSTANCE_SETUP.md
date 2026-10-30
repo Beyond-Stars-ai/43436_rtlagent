@@ -12,7 +12,8 @@
 ```bash
 cd /workspace/submission/43436_rtlagent      # 或 git clone 到任意可写目录
 export FPGACHINA_TOKEN=<赛事方令牌>
-bash serve/start.sh                          # 打印 READY 即可
+bash serve/start.sh                          # ① 推理服务，打印 READY
+bash serve/run_api.sh start                  # ② 投题服务（7860，自动重启）
 curl -s localhost:7860/v1/health -H "Authorization: Bearer $FPGACHINA_TOKEN"
 # 期望 {"ready":true,"track":"rtl","model":"Qwen3.6-35B-A3B","vram_gb":21.6}
 ```
@@ -26,6 +27,7 @@ cd 43436_rtlagent
 ./fetch_model.sh /var/tmp/models_35b          # 21 GB，约 10~20 分钟；落到 /var/tmp 是因为持久盘只有 25 GB
 export FPGACHINA_TOKEN=<令牌>
 bash serve/start.sh
+bash serve/run_api.sh start
 ```
 
 `serve/start.sh` 的权重查找顺序（已内置）：
@@ -52,6 +54,7 @@ git clone ... && cd 43436_rtlagent
 ./fetch_model.sh /var/tmp/models_35b
 export FPGACHINA_TOKEN=<令牌>
 bash serve/start.sh
+bash serve/run_api.sh start
 ```
 
 ## 4. 自检清单（启动后 30 秒内完成）
