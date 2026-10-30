@@ -3,7 +3,7 @@
 #   官方基镜像：fpgachina-rtlhls（rocm10-2026.1-r3，Radeon Cloud 私有 registry）
 #   内含 Vivado/Vitis 2026.1、llama.cpp(/opt/llamacpp)、ROCm 10.0、python3
 #   本方案额外依赖：Node 22 + @deepseek-ai/dsh 0.2.1-rc.2（约 +900 MB）
-#   构建前须把权重放进构建上下文：models/Qwen3.6-35B-A3B-UD-Q4_K_M.gguf（21 GB）
+#   构建前须把权重放进构建上下文：models/Qwen3.6-35B-A3B-UD-Q5_K_M.gguf（24.64 GiB）
 # BASE_IMAGE 与官方 example/Dockerfile 完全一致（含完整 digest，64 位）
 # 官方说明：该镜像在平台私有 registry 内，外部无法拉取；实例上也没有 docker，
 # 因此队伍不自行构建本文件；赛事方仅在"容器重建回退模式"下用它（API_CONTRACT §8）。
@@ -16,7 +16,7 @@ ENV DEBIAN_FRONTEND=noninteractive \
     XILINXD_LICENSE_FILE=2100@vivado-lic.fpgachina.svc.cluster.local \
     FLEXLM_TIMEOUT=600 \
     ROCBLAS_TENSILE_LIBPATH=/opt/llamacpp/rocblas/library \
-    MODEL_FILE=/opt/models/Qwen3.6-35B-A3B-UD-Q4_K_M.gguf \
+    MODEL_FILE=/opt/models/Qwen3.6-35B-A3B-UD-Q5_K_M.gguf \
     DSH_HOME=/opt/dsh-home \
     PATH=/opt/node/bin:$PATH \
     FPGACHINA_TOKEN=""
@@ -60,7 +60,7 @@ RUN DSH_HOME=/opt/dsh-home bash agent/setup_dsh.sh \
 
 # ---- 权重兜底：FETCH_MODEL=1 时构建期下载并校验；否则只提示，不中断构建 ----
 RUN set -e; \
-    GGUF=/opt/models/Qwen3.6-35B-A3B-UD-Q4_K_M.gguf; \
+    GGUF=/opt/models/Qwen3.6-35B-A3B-UD-Q5_K_M.gguf; \
     if [ ! -f "$GGUF" ] && [ "$FETCH_MODEL" = "1" ]; then \
       echo "fetching weights at build time (FETCH_MODEL=1)"; bash /app/fetch_model.sh /opt/models; \
     fi; \
