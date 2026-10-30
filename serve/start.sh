@@ -70,8 +70,10 @@ fi
 echo "model: $MODEL_FILE"
 
 if ! curl -sf -m 2 http://127.0.0.1:8000/v1/models >/dev/null 2>&1; then
+  # --parallel 1：智能体串行跑单题，单槽独占整份 KV，避免 4 槽共用池的碎片
+  # （曾出现 "failed to find free space in the KV cache" 导致 L0）
   setsid /opt/llamacpp/llama-server -m "$MODEL_FILE" --host 127.0.0.1 --port 8000 \
-    -ngl 999 -c "$MAX_LEN" --jinja --alias qwen36-35b \
+    -ngl 999 -c "$MAX_LEN" --parallel 1 --jinja --alias qwen36-35b \
     --reasoning off --chat-template-kwargs '{"enable_thinking": false}' \
     > "$LOG_DIR/llama.log" 2>&1 &
   for i in $(seq 1 120); do curl -sf -m 2 http://127.0.0.1:8000/v1/models >/dev/null 2>&1 && break; sleep 2; done

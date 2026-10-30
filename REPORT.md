@@ -1,4 +1,4 @@
-# FPGA 创新设计大赛 AMD RTL/HLS 本地智能体设计赛道 —— 设计报告
+﻿# FPGA 创新设计大赛 AMD RTL/HLS 本地智能体设计赛道 —— 设计报告
 
 **队伍编号：43436　｜　赛道：RTL　｜　提交模型：Qwen3.6-35B-A3B（GGUF UD-Q5_K_M）**
 
@@ -86,8 +86,8 @@
 | 量化 | unsloth GGUF **UD-Q5_K_M**（约 5.6 bit/参数），文件 26,456,194,016 B（24.64 GiB） |
 | 来源 | `https://huggingface.co/unsloth/Qwen3.6-35B-A3B-GGUF`，revision `a483e9e6cbd595906af30beda3187c2663a1118c` |
 | SHA-256 | `c13ce26253ea334df472bd8fbd2d6da66d8a41195c17f6fcbf44c4d20ece0932` |
-| 显存实测 | **27.81 GB（25.90 GiB）@49152 上下文**，单卡 32 GB 内 |
-| 生成速度 | 约 50 token/s（同卡 Q4 为 53.7，Q5 略慢） |
+| 显存实测 | **27.60 GB（25.71 GiB）@49152 上下文**，单卡 32 GB 内 |
+| 生成速度 | **44.8 tok/s**（Q5 实测；同卡 Q4 为 53.7） |
 
 ### 3.2 评估过并放弃的候选
 
@@ -107,8 +107,8 @@
 
 llama.cpp（`/opt/llamacpp/llama-server`，ROCm 后端）：`-ngl 999`、`-c 49152`（从 `manifest.json`
 的 `context.max_model_len` 读取，避免声明与实现漂移）、`--jinja`、`--reasoning off`、
-`--chat-template-kwargs '{"enable_thinking": false}'`；`--temp 0 --top-k 1` 由 `serve_api.py`
-在请求里固定。
+`--chat-template-kwargs '{"enable_thinking": false}'`、**`--parallel 1`**（单槽独占整份 KV，避免 4 槽共用池
+的碎片导致 `failed to find free space in the KV cache` 而判 L0 —— 实测踩过）；`--temp 0 --top-k 1` 由 `serve_api.py` 在请求里固定。
 
 上下文从 24K → 32K → **48K** 的三次调整都有依据：24K 时 L0 为 7 题（上下文溢出），32K 降到 2，
 48K 后 3 道确认溢出的题（Prob015/116/134）具备恢复条件。**基线侧实测 5/5 逐位相同**，

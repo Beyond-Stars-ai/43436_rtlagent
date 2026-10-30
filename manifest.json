@@ -6,7 +6,7 @@
     "source": "https://huggingface.co/unsloth/Qwen3.6-35B-A3B-GGUF",
     "revision": "a483e9e6cbd595906af30beda3187c2663a1118c",
     "quantization": "gguf-ud-q5_k_m",
-    "measured_vram_gb": 27.8,
+    "measured_vram_gb": 27.6,
     "finetuned": false,
     "finetune_weights_url": null
   },
